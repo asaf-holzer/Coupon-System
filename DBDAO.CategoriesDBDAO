@@ -1,0 +1,180 @@
+package com.asafh.dbdao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import com.asafh.beans.Category;
+
+import com.asafh.dao.CategoriesDAO;
+import com.asafh.utils.duplicateCategoryException;
+
+public class CategoriesDBDAO implements CategoriesDAO {
+	public static int countCategory;
+
+	public static int getIdCategory(Category category) {
+		int idCategory = 0;
+		Connection connection = null;
+		try {
+
+			try {
+				connection = com.asafh.utils.ConnectionPool.getInstance().getConnection();
+			} catch (InterruptedException e) {
+
+				e.printStackTrace();
+			}
+			String sql = "SELECT * FROM `coupons_system`.`categories` WHERE name=? ";
+
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setString(1, category.name());
+			ResultSet resultSet = statement.executeQuery();
+
+			if (resultSet.next()) {
+				idCategory = resultSet.getInt(1);
+
+				return idCategory;
+			}
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			com.asafh.utils.ConnectionPool.getInstance().returnConnection(connection);
+			connection = null;
+		}
+		return 0;
+
+	}
+
+	public static Category getCategoryUponId(int categoryID) {
+		Category category2 = null;
+		Connection connection = null;
+		try {
+
+			try {
+				connection = com.asafh.utils.ConnectionPool.getInstance().getConnection();
+			} catch (InterruptedException e) {
+
+				e.printStackTrace();
+			}
+			String sql = "SELECT * FROM `coupons_system`.`categories` WHERE id=? ";
+
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setInt(1, categoryID);
+			ResultSet resultSet = statement.executeQuery();
+
+			if (resultSet.next()) {
+				if (resultSet.getString(2).equalsIgnoreCase("Electricity")) {
+					category2 = Category.Electricity;
+				} else if (resultSet.getString(2).equalsIgnoreCase("Food")) {
+					category2 = Category.Food;
+				} else if (resultSet.getString(2).equalsIgnoreCase("Restaurant")) {
+					category2 = Category.Restaurant;
+				} else if (resultSet.getString(2).equalsIgnoreCase("Vacation")) {
+					category2 = Category.Vacation;
+				}
+				return category2;
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			com.asafh.utils.ConnectionPool.getInstance().returnConnection(connection);
+			connection = null;
+		}
+		return null;
+
+	}
+
+	@Override
+	public void addCategory(Category category) throws duplicateCategoryException {
+		if (!isCtegoryExist(category)) {
+
+			Connection connection = null;
+			try {
+				try {
+					connection = com.asafh.utils.ConnectionPool.getInstance().getConnection();
+
+				} catch (InterruptedException e) {
+
+					System.out.println(e.getMessage());
+				}
+
+				String sql = "INSERT INTO `coupons_system`.`categories` (name) VALUES (?)";
+
+				PreparedStatement statement = connection.prepareStatement(sql);
+
+				statement.setString(1, category.name());
+
+				statement.executeUpdate();
+
+				countCategory++;
+
+			} catch (SQLException e) {
+				System.out.println(e.getMessage());
+			} finally {
+				com.asafh.utils.ConnectionPool.getInstance().returnConnection(connection);
+				connection = null;
+			}
+		} else {
+			throw new com.asafh.utils.duplicateCategoryException();
+		}
+
+	}
+
+	@Override
+	public void updateCategory(int categoryID, Category category) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void deleteCategory(int categoryID) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Category getCategory() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean isCtegoryExist(Category category) {
+		Connection connection = null;
+		try {
+			try {
+				connection = com.asafh.utils.ConnectionPool.getInstance().getConnection();
+
+			} catch (InterruptedException e) {
+
+				System.out.println(e.getMessage());
+			}
+
+			String sql = "SELECT * FROM `coupons_system`.`categories` " + "WHERE name=?";
+			PreparedStatement statement1 = connection.prepareStatement(sql);
+			statement1.setString(1, category.name());
+
+			ResultSet resultSet = statement1.executeQuery();
+
+			boolean isCategoryExists = false;
+
+			if (resultSet.next()) {
+				isCategoryExists = true;
+
+			}
+
+			return isCategoryExists;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+
+		} finally {
+			com.asafh.utils.ConnectionPool.getInstance().returnConnection(connection);
+			connection = null;
+		}
+
+		return false;
+
+	}
+
+}
